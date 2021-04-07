@@ -10,7 +10,7 @@ from keep_alive import keep_alive
 client = commands.Bot(command_prefix='c!')
 client.remove_command('help')
 
-
+x = 0
 @client.event
 async def on_ready():
     print(f'{client.user.name} has connected to Discord!')
