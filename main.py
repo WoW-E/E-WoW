@@ -1,6 +1,6 @@
 import os
 import random
-
+import json
 import discord
 from discord.ext import commands
 
@@ -9,7 +9,7 @@ from keep_alive import keep_alive
 client = commands.Bot(command_prefix='c!')
 client.remove_command('help')
 
-x = 0
+
 @client.event
 async def on_ready():
     print(f'{client.user.name} has connected to Discord!')
@@ -18,6 +18,21 @@ async def on_ready():
 @client.command()
 async def ping(ctx):
     await ctx.send(f'Pong! {round(client.latency * 100, 2)}ms')
+
+
+@client.command()
+async def hi(ctx):
+    await ctx.send('Hi!')
+
+
+@client.command()
+async def hello(ctx):
+    await ctx.send('Hi man!! Good to see you')
+
+
+@client.command()
+async def bye(ctx):
+    await ctx.send('Bye! ~Anyways no one was interested in talking to you~')
 
 
 @client.command()
@@ -30,6 +45,12 @@ async def thanks(ctx, *, user: discord.Member = None):
         )
 
 
+##def get_prefix(client,message):
+##    with open(prefixes.json, "r") as fprefix:
+##        prefixes = json.load()
+##        return prefixes[]
+
+
 @client.command(name='shoot')
 async def shoot(ctx, *, user: discord.Member = None):
     if user:
@@ -40,7 +61,11 @@ async def shoot(ctx, *, user: discord.Member = None):
             await ctx.send(
                 f'{ctx.message.author.mention} DIED. NO F/RIP for you! Trying to kill a bot huh!'
             )
-        elif user.id == 605457586292129840:
+        elif user.id == ctx.message.author.id:
+            await ctx.send(
+                f'{ctx.message.author.mention} Killing yourself is bad!!'
+            )
+        elif user.id == 605457586292129840 or 828858506975117332 or 828848983978934292 or 732077451601248340:
             await ctx.send(
                 'How dare you try to shoot the super fantastic awesome guy who made me!! Go shoot someone else!!'
             )
@@ -51,21 +76,6 @@ async def shoot(ctx, *, user: discord.Member = None):
     else:
         await ctx.send(
             'You only had one bullet. Next time *mention* who to shoot')
-
-
-@client.command()
-async def hi(ctx):
-    await ctx.send('Hi!')
-
-
-@client.command()
-async def bye(ctx):
-    await ctx.send('Bye! ~Anyways no one was interested in talking to you~')
-
-
-@client.command()
-async def hello(ctx):
-    await ctx.send('Hi man!! Good to see you')
 
 
 @client.command()
@@ -110,7 +120,7 @@ async def help(ctx):
 @client.command()
 async def dm(ctx, user: discord.Member = None, *, message=None):
     author = ctx.message.author
-    if author.id == 605457586292129840 or 605066568186986516:
+    if author.id == 605457586292129840:
         if user:
             if message is None:
                 await ctx.send('No message')
@@ -128,4 +138,4 @@ async def dm(ctx, user: discord.Member = None, *, message=None):
 
 keep_alive()
 
-client.run(os.getenv('TOKEN'))
+client.run('ODI4ODUxNjUwMzc4MjAzMTQ2.YGvmQA.EPYXl3jwbGxmkAMP46Aw_8WwrJI')
