@@ -1,13 +1,55 @@
+import json
 import os
 import random
-import json
+
 import discord
 from discord.ext import commands
 
 from keep_alive import keep_alive
 
-client = commands.Bot(command_prefix='c!')
+
+def get_prefix(client, message):
+    with open("prefixes.json", "r") as fprefix:
+        prefixes = json.load(fprefix)
+
+        return prefixes[str(message.guild.id)]
+
+
+client = commands.Bot(command_prefix=get_prefix)
 client.remove_command('help')
+
+
+@client.event
+async def on_guild_join(guild):
+    with open("prefixes.json", "r") as fprefix:
+        prefixes = json.load(fprefix)
+
+    prefixes[str(guild.id)] = '.'
+
+    with open("prefixes.json", "w") as fprefix:
+        json.dump(prefixes, fprefix, indent=4)
+
+
+@client.event
+async def on_guild_remove(guild):
+    with open("prefixes.json", "r") as fprefix:
+        prefixes = json.load(fprefix)
+
+    prefixes.pop(str(guild.id))
+
+    with open("prefixes.json", "w") as fprefix:
+        json.dump(prefixes, fprefix, indent=4)
+
+
+@client.event
+async def setprefix(ctx, prefix):
+    with open("prefixes.json", "r") as fprefix:
+        prefixes = json.load(fprefix)
+
+    prefixes[str(ctx.guild.id)] = prefix
+
+    with open("prefixes.json", "w") as fprefix:
+        json.dump(prefixes, fprefix, indent=4)
 
 
 @client.event
@@ -43,12 +85,6 @@ async def thanks(ctx, *, user: discord.Member = None):
         await ctx.send(
             "Since you didn't *mention* someone, I think you might be thanking me and <@605457586292129840> !!"
         )
-
-
-##def get_prefix(client,message):
-##    with open(prefixes.json, "r") as fprefix:
-##        prefixes = json.load()
-##        return prefixes[]
 
 
 @client.command(name='shoot')
@@ -138,4 +174,4 @@ async def dm(ctx, user: discord.Member = None, *, message=None):
 
 keep_alive()
 
-client.run('ODI4ODUxNjUwMzc4MjAzMTQ2.YGvmQA.EPYXl3jwbGxmkAMP46Aw_8WwrJI')
+client.run(os.getenv('TOKEN'))
