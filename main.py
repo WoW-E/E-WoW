@@ -1,10 +1,12 @@
 import json
 import os
 import random
+from dotenv import load_dotenv
 
+load_dotenv('.env')
 import discord
 from discord.ext import commands
-
+from discord.ext.commands import has_permissions, CheckFailure
 from keep_alive import keep_alive
 
 
@@ -24,7 +26,7 @@ async def on_guild_join(guild):
     with open("prefixes.json", "r") as fprefix:
         prefixes = json.load(fprefix)
 
-    prefixes[str(guild.id)] = '.'
+    prefixes[str(guild.id)] = 'c!'
 
     with open("prefixes.json", "w") as fprefix:
         json.dump(prefixes, fprefix, indent=4)
@@ -41,16 +43,17 @@ async def on_guild_remove(guild):
         json.dump(prefixes, fprefix, indent=4)
 
 
-@client.event
+@client.command()
+@commands.has_permissions(manage_guild=True)
 async def setprefix(ctx, prefix):
     with open("prefixes.json", "r") as fprefix:
         prefixes = json.load(fprefix)
 
     prefixes[str(ctx.guild.id)] = prefix
+    await ctx.send(f'Prefix successfully changed to {prefix}')
 
     with open("prefixes.json", "w") as fprefix:
         json.dump(prefixes, fprefix, indent=4)
-
 
 @client.event
 async def on_ready():
@@ -121,6 +124,10 @@ async def bruh(ctx):
 
 @client.command(pass_context=True)
 async def help(ctx):
+    with open("prefixes.json", "r") as fprefix:
+        prefixes = json.load(fprefix)
+
+    prefix = prefixes[str(ctx.guild.id)]
     author = ctx.message.author
     random_opt = random.randint(0, 2)
     if random_opt == 1:
@@ -130,23 +137,24 @@ async def help(ctx):
     else:
         help_embed = discord.Embed(colour=discord.Colour.green())
     help_embed.set_author(name='Help')
-    help_embed.add_field(name='Prefix', value='Prefix is "c!"', inline=False)
-    help_embed.add_field(name='c!help',
+    help_embed.add_field(name='Prefix', value=f'Default Prefix is "c!". But this server prefix is {prefix}',
+                         inline=False)
+    help_embed.add_field(name=f'{prefix}help',
                          value='Shows this message dumdum',
                          inline=False)
-    help_embed.add_field(name='c!ping', value='Shows your ping', inline=False)
-    help_embed.add_field(name='c!hi/hello', value='Greets you', inline=False)
+    help_embed.add_field(name=f'{prefix}ping', value='Shows your ping', inline=False)
+    help_embed.add_field(name=f'{prefix}hi/hello', value='Greets you', inline=False)
     help_embed.add_field(
-        name='c!bye',
+        name=f'{prefix}bye',
         value='says bye to you (:warning: Warning, its toxic!).',
         inline=False)
-    help_embed.add_field(name='c!thanks {user}',
+    help_embed.add_field(name=f'{prefix}thanks [user]',
                          value='Thanks the person you mention',
                          inline=False)
-    help_embed.add_field(name='c!shoot {user}',
+    help_embed.add_field(name=f'{prefix}shoot [user]',
                          value='shoots someone',
                          inline=False)
-    help_embed.add_field(name='c!bruh',
+    help_embed.add_field(name=f'{prefix}bruh',
                          value='shows a image showing bruh moment',
                          inline=False)
 
