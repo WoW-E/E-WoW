@@ -1,13 +1,14 @@
 import json
 import os
 import random
-from dotenv import load_dotenv
 
-load_dotenv('.env')
 import discord
 from discord.ext import commands
-from discord.ext.commands import has_permissions, CheckFailure
+from dotenv import load_dotenv
+
 from keep_alive import keep_alive
+
+load_dotenv('.env')
 
 
 def get_prefix(client, message):
@@ -32,7 +33,7 @@ async def on_guild_join(guild):
         json.dump(prefixes, fprefix, indent=4)
 
 
-@client.event
+@client.command()
 async def on_guild_remove(guild):
     with open("prefixes.json", "r") as fprefix:
         prefixes = json.load(fprefix)
@@ -54,6 +55,7 @@ async def setprefix(ctx, prefix):
 
     with open("prefixes.json", "w") as fprefix:
         json.dump(prefixes, fprefix, indent=4)
+
 
 @client.event
 async def on_ready():
