@@ -157,7 +157,7 @@ async def shoot(ctx, *, user: discord.Member = None):
             await ctx.send(
                 f'{ctx.message.author.mention} Killing yourself is bad!!'
             )
-        elif user.id == 605457586292129840 or 828858506975117332 or 828848983978934292 or 732077451601248340:
+        elif user.id in [605457586292129840, 828858506975117332, 828848983978934292, 732077451601248340]:
             await ctx.send(
                 'How dare you try to shoot the super fantastic awesome guy who made me!! Go shoot someone else!!'
             )
@@ -227,7 +227,7 @@ async def help(ctx):
 @client.command()
 async def dm(ctx, user: discord.Member = None, *, message=None):
     author = ctx.message.author
-    if author.id == 605457586292129840 or 828858506975117332 or 732077451601248340 or 828848983978934292:
+    if author.id in [605457586292129840, 828858506975117332, 732077451601248340, 828848983978934292]:
         if user:
             if message is None:
                 await ctx.send('No message')
