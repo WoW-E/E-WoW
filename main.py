@@ -4,8 +4,9 @@ import random
 
 import discord
 from discord.ext import commands
+from dotenv import load_dotenv
 
-from keep_alive import keep_alive
+load_dotenv('.env')
 
 
 def get_prefix(client, message):
@@ -178,7 +179,5 @@ async def dm(ctx, user: discord.Member = None, *, message=None):
     else:
         await ctx.send('Invalid Command?')
 
-
-keep_alive()
 
 client.run(os.getenv('TOKEN'))
