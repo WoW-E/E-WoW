@@ -4,9 +4,6 @@ import random
 
 import discord
 from discord.ext import commands
-from dotenv import load_dotenv
-
-load_dotenv('.env')
 
 
 def get_prefix(client, message):
