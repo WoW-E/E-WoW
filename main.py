@@ -121,7 +121,7 @@ async def hi(ctx):
 
 @client.command(aliases=[""])
 async def bye(ctx):
-    await ctx.send('Bye! ~Anyways no one was interested in talking to you~')
+    await ctx.send('Bye! ~~Anyways no one was interested in talking to you~~')
 
 
 @client.command()
