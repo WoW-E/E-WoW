@@ -1,12 +1,14 @@
+import discord
 import json
 import os
 import random
+import time
+from itertools import cycle
 
-import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 
-def get_prefix(client, message):
+def get_prefix(message):
     with open("prefixes.json", "r") as fprefix:
         prefixes = json.load(fprefix)
 
@@ -15,6 +17,8 @@ def get_prefix(client, message):
 
 client = commands.Bot(command_prefix=get_prefix)
 client.remove_command('help')
+status = cycle(
+    ['Finding Hoomans', 'Killing Hoomans'])
 
 
 @client.event
@@ -28,7 +32,7 @@ async def on_guild_join(guild):
         json.dump(prefixes, fprefix, indent=4)
 
 
-@client.command()
+@client.event
 async def on_guild_remove(guild):
     with open("prefixes.json", "r") as fprefix:
         prefixes = json.load(fprefix)
@@ -54,7 +58,55 @@ async def setprefix(ctx, prefix):
 
 @client.event
 async def on_ready():
+    change_status.start()
     print(f'{client.user.name} has connected to Discord!')
+
+
+@tasks.loop(seconds=10)
+async def change_status():
+    await client.change_presence(activity=discord.Game(next(status)))
+
+
+@client.command()
+async def kick(ctx, member: discord.Member, *, reason=None):
+    await member.kick(reason=reason)
+    await ctx.send(f"Successfully kicked {member.mention}")
+    await ctx.user.send(f"You were kicked from {member.guild} by {ctx.author} for {reason}")
+    await ctx.author.send(f"You kicked {member.display_name} from {member.guild} for {reason}")
+
+
+@client.command()
+async def ban(ctx, member: discord.Member, *, reason=None):
+    await member.ban(reason=reason)
+    await ctx.send(f"Successfully banned {member.mention}")
+    await ctx.user.send(f"You were banned from {member.guild} by {ctx.author} for {reason}")
+    await ctx.author.send(f"You banned {member.display_name} from {member.guild} for {reason}")
+
+
+@client.command()
+async def unban(ctx, *, member):
+    banned_users = await ctx.guild.bans()
+    member_name, member_discriminator = member.split('#')
+
+    for ban_entry in banned_users:
+        user = ban_entry.user
+
+        if (user.name, user.discriminator) == (member_name, member_discriminator):
+            await ctx.guild.unban(user)
+            await ctx.send(f"Successfully unbanned {user.name}#{user.discriminator}")
+            await ctx.author.send(f"You unbanned {user.name}#{user.discriminator} from {ctx.guild.id}.")
+            return
+
+
+# @client.command()
+# async def start(ctx):
+#     with open("balance.json", "r") as fbal:
+#         balances1 = json.load(fbal)
+#
+#     balances1[str(ctx.author.id)] = 0
+#
+#     with open("balance.json", "w") as fbal:
+#         json.dump(balances1, fbal, indent=4)
 
 
 @client.command()
@@ -62,19 +114,14 @@ async def ping(ctx):
     await ctx.send(f'Pong! {round(client.latency * 100, 2)}ms')
 
 
-@client.command()
+@client.command(aliases=["HI", "hello", "Hello", "Hey", "hey"])
 async def hi(ctx):
     await ctx.send('Hi!')
 
 
-@client.command()
-async def hello(ctx):
-    await ctx.send('Hi man!! Good to see you')
-
-
-@client.command()
+@client.command(aliases=[""])
 async def bye(ctx):
-    await ctx.send('Bye! ~Anyways no one was interested in talking to you~')
+    await ctx.send('Bye! ~~Anyways no one was interested in talking to you~~')
 
 
 @client.command()
@@ -85,6 +132,15 @@ async def thanks(ctx, *, user: discord.Member = None):
         await ctx.send(
             "Since you didn't *mention* someone, I think you might be thanking me and <@605457586292129840> !!"
         )
+
+
+# @client.command(name="balance", aliases=['bal', 'cash'])
+# async def balance(ctx, *, user: discord.Member = None):
+#     with open("balance.json", "r") as fbal:
+#         balancesheet = json.load(fbal)
+#
+#     user_balance = balancesheet[str(ctx.user.id)]
+#     await ctx.send(f"{user.mention} has {user_balance}")
 
 
 @client.command(name='shoot')
@@ -119,6 +175,15 @@ async def bruh(ctx):
     await ctx.send(file=discord.File('bruh.jpg'))
 
 
+@client.command()
+@commands.has_permissions(manage_guild=True)
+async def clear(ctx, clearno=2):
+    await ctx.channel.purge(limit=clearno)
+    await ctx.send(f"You cleared {clearno}.")
+    time.sleep(1)
+    await ctx.channel.purge(limit=1)
+
+
 @client.command(pass_context=True)
 async def help(ctx):
     with open("prefixes.json", "r") as fprefix:
@@ -139,11 +204,12 @@ async def help(ctx):
     help_embed.add_field(name=f'{prefix}help',
                          value='Shows this message dumdum',
                          inline=False)
+    help_embed.add_field(name=f'{prefix}setprefix', value='Changes prefix for the server', inline=False)
     help_embed.add_field(name=f'{prefix}ping', value='Shows your ping', inline=False)
-    help_embed.add_field(name=f'{prefix}hi/hello', value='Greets you', inline=False)
+    help_embed.add_field(name=f'{prefix}hi/hello/hey', value='Greets you hi', inline=False)
     help_embed.add_field(
         name=f'{prefix}bye',
-        value='says bye to you (:warning: Warning, its toxic!).',
+        value='Says bye to you .',
         inline=False)
     help_embed.add_field(name=f'{prefix}thanks [user]',
                          value='Thanks the person you mention',
@@ -161,7 +227,7 @@ async def help(ctx):
 @client.command()
 async def dm(ctx, user: discord.Member = None, *, message=None):
     author = ctx.message.author
-    if author.id == 605457586292129840:
+    if author.id == 605457586292129840 or 828858506975117332 or 732077451601248340 or 828848983978934292:
         if user:
             if message is None:
                 await ctx.send('No message')
