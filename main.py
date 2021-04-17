@@ -8,7 +8,7 @@ from itertools import cycle
 from discord.ext import commands, tasks
 
 
-def get_prefix(message):
+def get_prefix(client, message):
     with open("prefixes.json", "r") as fprefix:
         prefixes = json.load(fprefix)
 
