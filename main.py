@@ -1,15 +1,23 @@
-import discord
+# To Do:
+# - Balance
+# - Need to make help better - ✓
+# - Clear command - ✓
+# - Perms error for kick,
+# - Perms error for unban - ✓
+# - Perms error for ban
+
 import json
 import os
 import random
 import time
 from itertools import cycle
 
+import discord
 from discord.ext import commands, tasks
 
 
 def get_prefix(client, message):
-    with open("prefixes.json", "r") as fprefix:
+    with open("json_files/prefixes.json", "r") as fprefix:
         prefixes = json.load(fprefix)
 
         return prefixes[str(message.guild.id)]
@@ -23,36 +31,36 @@ status = cycle(
 
 @client.event
 async def on_guild_join(guild):
-    with open("prefixes.json", "r") as fprefix:
+    with open("json_files/prefixes.json", "r") as fprefix:
         prefixes = json.load(fprefix)
 
     prefixes[str(guild.id)] = 'c!'
 
-    with open("prefixes.json", "w") as fprefix:
+    with open("json_files/prefixes.json", "w") as fprefix:
         json.dump(prefixes, fprefix, indent=4)
 
 
 @client.event
 async def on_guild_remove(guild):
-    with open("prefixes.json", "r") as fprefix:
+    with open("json_files/prefixes.json", "r") as fprefix:
         prefixes = json.load(fprefix)
 
     prefixes.pop(str(guild.id))
 
-    with open("prefixes.json", "w") as fprefix:
+    with open("json_files/prefixes.json", "w") as fprefix:
         json.dump(prefixes, fprefix, indent=4)
 
 
 @client.command()
 @commands.has_permissions(manage_guild=True)
 async def setprefix(ctx, prefix):
-    with open("prefixes.json", "r") as fprefix:
+    with open("json_files/prefixes.json", "r") as fprefix:
         prefixes = json.load(fprefix)
 
     prefixes[str(ctx.guild.id)] = prefix
     await ctx.send(f'Prefix successfully changed to {prefix}')
 
-    with open("prefixes.json", "w") as fprefix:
+    with open("json_files/prefixes.json", "w") as fprefix:
         json.dump(prefixes, fprefix, indent=4)
 
 
@@ -84,19 +92,31 @@ async def ban(ctx, member: discord.Member, *, reason=None):
 
 
 @client.command()
-async def unban(ctx, *, member):
-    banned_users = await ctx.guild.bans()
-    member_name, member_discriminator = member.split('#')
+async def unban(ctx, *, user=None):
 
-    for ban_entry in banned_users:
-        user = ban_entry.user
+    try:
+        user = await commands.converter.UserConverter().convert(ctx, user)
+    except:
+        await ctx.send("Error: user could not be found!")
+        return
 
-        if (user.name, user.discriminator) == (member_name, member_discriminator):
-            await ctx.guild.unban(user)
-            await ctx.send(f"Successfully unbanned {user.name}#{user.discriminator}")
-            await ctx.author.send(f"You unbanned {user.name}#{user.discriminator} from {ctx.guild.id}.")
+    try:
+        bans = tuple(ban_entry.user for ban_entry in await ctx.guild.bans())
+        if user in bans:
+            await ctx.guild.unban(user, reason="Responsible moderator: "+ str(ctx.author))
+        else:
+            await ctx.send("User not banned!")
             return
 
+    except discord.Forbidden:
+        await ctx.send("I do not have permission to unban!")
+        return
+
+    except:
+        await ctx.send("Unbanning failed!")
+        return
+
+    await ctx.send(f"Successfully unbanned {user.mention}!")
 
 # @client.command()
 # async def start(ctx):
@@ -149,7 +169,7 @@ async def shoot(ctx, *, user: discord.Member = None):
         await ctx.send(f"You are trying to shoot {user.mention}")
         if user.bot:
             await ctx.send('You trying to shoot the bots but...')
-            await ctx.send(file=discord.File('uno-reverse.gif'))
+            await ctx.send(file=discord.File('static/gifs/uno-reverse.gif'))
             await ctx.send(
                 f'{ctx.message.author.mention} DIED. NO F/RIP for you! Trying to kill a bot huh!'
             )
@@ -172,12 +192,12 @@ async def shoot(ctx, *, user: discord.Member = None):
 
 @client.command()
 async def bruh(ctx):
-    await ctx.send(file=discord.File('bruh.jpg'))
+    await ctx.send(file=discord.File('static/pictures/bruh.jpg'))
 
 
 @client.command()
 @commands.has_permissions(manage_guild=True)
-async def clear(ctx, clearno=2):
+async def clear(ctx, clearno=100):
     await ctx.channel.purge(limit=clearno)
     await ctx.send(f"You cleared {clearno}.")
     time.sleep(1)
@@ -186,7 +206,7 @@ async def clear(ctx, clearno=2):
 
 @client.command(pass_context=True)
 async def help(ctx):
-    with open("prefixes.json", "r") as fprefix:
+    with open("json_files/prefixes.json", "r") as fprefix:
         prefixes = json.load(fprefix)
 
     prefix = prefixes[str(ctx.guild.id)]
@@ -199,28 +219,36 @@ async def help(ctx):
     else:
         help_embed = discord.Embed(colour=discord.Colour.green())
     help_embed.set_author(name='Help')
+
     help_embed.add_field(name='Prefix', value=f'Default Prefix is "c!". But this server prefix is {prefix}',
                          inline=False)
-    help_embed.add_field(name=f'{prefix}help',
-                         value='Shows this message dumdum',
-                         inline=False)
-    help_embed.add_field(name=f'{prefix}setprefix', value='Changes prefix for the server', inline=False)
-    help_embed.add_field(name=f'{prefix}ping', value='Shows your ping', inline=False)
-    help_embed.add_field(name=f'{prefix}hi/hello/hey', value='Greets you hi', inline=False)
-    help_embed.add_field(
-        name=f'{prefix}bye',
-        value='Says bye to you .',
-        inline=False)
-    help_embed.add_field(name=f'{prefix}thanks [user]',
-                         value='Thanks the person you mention',
-                         inline=False)
-    help_embed.add_field(name=f'{prefix}shoot [user]',
-                         value='shoots someone',
-                         inline=False)
-    help_embed.add_field(name=f'{prefix}bruh',
-                         value='shows a image showing bruh moment',
-                         inline=False)
 
+    help_embed.add_field(name=f'{prefix}help', value='Shows this message dumdum\n', inline=False)
+
+    help_embed.add_field(name=f'{prefix}setprefix', value='Changes prefix for the server', inline=False)
+
+    help_embed.add_field(name=f'{prefix}hi/hello/hey', value='Greets you hi', inline=False)
+
+    help_embed.add_field(name=f'{prefix}ping', value='Shows your ping', inline=False)
+
+    help_embed.add_field(name=f'{prefix}shoot [user]', value='shoots someone', inline=False)
+
+    help_embed.add_field(name=f'{prefix}bruh', value='shows a image showing bruh moment', inline=False)
+
+    help_embed.add_field(name=f"{prefix}clear [number of messages]",
+                         value='Deletes [number of messages] which are the most recently sent.')
+
+    # help_embed.add_field(name=f"{prefix}dm [user] [message]", value='Sends a [message] to [user].')
+
+    help_embed.add_field(name=f'{prefix}kick [user]', value='Kicks [user] from the server.', inline=False)
+
+    help_embed.add_field(name=f'{prefix}ban [user]', value='Bans [user] from the server.', inline=False)
+
+    help_embed.add_field(name=f'{prefix}unban [user]', value='Unbans [user] from the server.', inline=False)
+
+    help_embed.add_field(name=f'{prefix}bye', value='Says bye to you.', inline=False)
+
+    help_embed.add_field(name=f'{prefix}thanks [user]', value='Thanks the person you mention', inline=False)
     await ctx.send(author.mention, embed=help_embed)
 
 
