@@ -15,6 +15,8 @@ from itertools import cycle
 import discord
 from discord.ext import commands, tasks
 
+from scraper import News, Import, Exterminate
+
 
 def get_prefix(client, message):
     with open("json_files/prefixes.json", "r") as fprefix:
@@ -93,7 +95,6 @@ async def ban(ctx, member: discord.Member, *, reason=None):
 
 @client.command()
 async def unban(ctx, *, user=None):
-
     try:
         user = await commands.converter.UserConverter().convert(ctx, user)
     except:
@@ -103,7 +104,7 @@ async def unban(ctx, *, user=None):
     try:
         bans = tuple(ban_entry.user for ban_entry in await ctx.guild.bans())
         if user in bans:
-            await ctx.guild.unban(user, reason="Responsible moderator: "+ str(ctx.author))
+            await ctx.guild.unban(user, reason="Responsible moderator: " + str(ctx.author))
         else:
             await ctx.send("User not banned!")
             return
@@ -117,6 +118,7 @@ async def unban(ctx, *, user=None):
         return
 
     await ctx.send(f"Successfully unbanned {user.mention}!")
+
 
 # @client.command()
 # async def start(ctx):
@@ -246,6 +248,9 @@ async def help(ctx):
 
     help_embed.add_field(name=f'{prefix}unban [user]', value='Unbans [user] from the server.', inline=False)
 
+    help_embed.add_field(name=f'{prefix}news [news subject] [number of articles]',
+                         value='Gives you [number of articles] on [news subject].')
+
     help_embed.add_field(name=f'{prefix}bye', value='Says bye to you.', inline=False)
 
     help_embed.add_field(name=f'{prefix}thanks [user]', value='Thanks the person you mention', inline=False)
@@ -269,6 +274,16 @@ async def dm(ctx, user: discord.Member = None, *, message=None):
             await ctx.send('No User')
     else:
         await ctx.send('Invalid Command?')
+
+
+@client.command()
+async def news(ctx, thing, count=3):
+    News(thing=[f'{thing}'], count=[f'{count}'])
+    titles, links = Import(things=[f'{thing}'])
+    Exterminate(things=[f'{thing}'])
+
+    for i, j in zip(titles, links):
+        await ctx.send(f"{i} - {j}")
 
 
 client.run(os.getenv('TOKEN'))
