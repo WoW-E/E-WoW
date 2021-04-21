@@ -9,9 +9,8 @@
 import json
 import os
 import random
-import time
 from itertools import cycle
-
+from asyncio import sleep
 import discord
 from discord.ext import commands, tasks
 
@@ -22,6 +21,8 @@ if os.path.isdir('database'):
     pass
 else:
     os.mkdir('database')
+
+developers = [605457586292129840, 828858506975117332, 828848983978934292, 732077451601248340]
 
 
 def get_prefix(client, message):
@@ -34,7 +35,7 @@ def get_prefix(client, message):
 client = commands.Bot(command_prefix=get_prefix)
 client.remove_command('help')
 status = cycle(
-    ['Finding Hoomans', 'Killing Hoomans'])
+    ['Finding Hoomans [1/2]', 'Killing Hoomans [2/2]'])
 
 
 @client.event
@@ -72,6 +73,32 @@ async def setprefix(ctx, prefix):
         json.dump(prefixes, fprefix, indent=4)
 
 
+@client.command()
+async def addprefixmanually(ctx, guildid, guildprefix):
+    if ctx.message.author.id in developers:
+        with open("json_files/prefixes.json", "r") as fprefix:
+            prefixes = json.load(fprefix)
+
+        prefixes[guildid] = guildprefix
+        await ctx.send(f'Prefix of {guildid} successfully changed to {guildprefix}')
+
+        with open("json_files/prefixes.json", "w") as fprefix:
+            json.dump(prefixes, fprefix, indent=4)
+    else:
+        await ctx.send("No perms")
+
+
+@client.command()
+async def showprefixes(ctx):
+    if ctx.message.author.id in developers:
+        with open("json_files/prefixes.json", "r") as fprefix:
+            prefixes = json.load(fprefix)
+
+        await ctx.send(str(json.dumps(prefixes, indent=4)))
+    else:
+        await ctx.send("Sorry, this command can be only used by this bot devs.")
+
+
 @client.event
 async def on_ready():
     change_status.start()
@@ -85,18 +112,71 @@ async def change_status():
 
 @client.command()
 async def kick(ctx, member: discord.Member, *, reason=None):
-    await member.kick(reason=reason)
-    await ctx.send(f"Successfully kicked {member.mention}")
-    await ctx.user.send(f"You were kicked from {member.guild} by {ctx.author} for {reason}")
-    await ctx.author.send(f"You kicked {member.display_name} from {member.guild} for {reason}")
+    msg = await ctx.send("Checking Perms...")
+    await sleep(0.5)
+    if isinstance(ctx.channel, discord.channel.DMChannel):
+        msg.edit(content= "Can you teach me how to kick someone in dms?")
+
+    else:
+        if ctx.message.guild.me.guild_permissions.kick_members:
+            if ctx.message.author.guild_permissions.kick_members:
+                await msg.edit(content="Permissions are valid, checking user you are trying to kick")
+                if member.id==ctx.message.guild.owner_id:
+                    await msg.edit(content="You can't kick the owner of the server!")
+                else:
+                    if member==ctx.message.guild.me:
+                        await msg.edit(content=f"{ctx.message.author.mention}You can't defeat me by using me")
+                    else:
+                        await msg.edit(content=f"Trying to kick {member.mention}")
+                        await sleep(2)
+                        await member.send(f"You are being kicked from {member.guild.name} by {ctx.message.author}\n Reason is {reason}")
+                        await member.kick(reason=reason)
+                        await msg.edit(content=f"Successfully kicked {member}")
+            else:
+                msg.edit(content="You are missing permissions")
+        else:
+            msg.edit(content="I am missing permission")
+
+
+@kick.error
+async def kick_error(ctx, error):
+    if isinstance(error, commands.CommandInvokeError):
+        await ctx.send("Error!! The person you are trying to kick might be on the same or higher role")
+
 
 
 @client.command()
 async def ban(ctx, member: discord.Member, *, reason=None):
-    await member.ban(reason=reason)
-    await ctx.send(f"Successfully banned {member.mention}")
-    await ctx.user.send(f"You were banned from {member.guild} by {ctx.author} for {reason}")
-    await ctx.author.send(f"You banned {member.display_name} from {member.guild} for {reason}")
+    msg = await ctx.send("Checking Perms...")
+    await sleep(0.5)
+    if isinstance(ctx.channel, discord.channel.DMChannel):
+        msg.edit(content= "Can you teach me how to ban someone in dms?")
+
+    else:
+        if ctx.message.guild.me.guild_permissions.ban_members:
+            if ctx.message.author.guild_permissions.ban_members:
+                await msg.edit(content="Permissions are valid, checking user you are trying to kick")
+                if member.id==ctx.message.guild.owner_id:
+                    await msg.edit(content="You can't ban the owner of the server!")
+                else:
+                    if member==ctx.message.guild.me:
+                        await msg.edit(content=f"{ctx.message.author.mention}You can't defeat me by using me")
+                    else:
+                        await msg.edit(content=f"Trying to ban {member.mention}")
+                        await sleep(2)
+                        await member.ban(reason=reason)
+                        await member.send(f"You are being banned from {member.guild.name} by {ctx.message.author}\n Reason is {reason}")
+                        await msg.edit(content=f"Successfully banned {member.mention}")
+            else:
+                msg.edit(content="You are missing permissions")
+        else:
+            msg.edit(content="I am missing permission")
+
+
+@ban.error
+async def ban_error(ctx, error):
+    if isinstance(error, commands.CommandInvokeError):
+        await ctx.send("Error!! The person you are trying to ban might be on the same or higher role")
 
 
 @client.command()
@@ -126,16 +206,6 @@ async def unban(ctx, *, user=None):
     await ctx.send(f"Successfully unbanned {user.mention}!")
 
 
-# @client.command()
-# async def start(ctx):
-#     with open("balance.json", "r") as fbal:
-#         balances1 = json.load(fbal)
-#
-#     balances1[str(ctx.author.id)] = 0
-#
-#     with open("balance.json", "w") as fbal:
-#         json.dump(balances1, fbal, indent=4)
-
 
 @client.command()
 async def ping(ctx):
@@ -162,16 +232,16 @@ async def thanks(ctx, *, user: discord.Member = None):
         )
 
 
-# @client.command(name="balance", aliases=['bal', 'cash'])
-# async def balance(ctx, *, user: discord.Member = None):
-#     with open("balance.json", "r") as fbal:
-#         balancesheet = json.load(fbal)
-#
-#     user_balance = balancesheet[str(ctx.user.id)]
-#     await ctx.send(f"{user.mention} has {user_balance}")
+@client.command(name="balance", aliases=['bal', 'cash'])
+async def balance(ctx, *, user: discord.Member = None):
+    with open("balance.json", "r") as fbal:
+        balancesheet = json.load(fbal)
+
+    user_balance = balancesheet[str(ctx.user.id)]
+    await ctx.send(f"{user.mention} has {user_balance}")
 
 
-@client.command(name='shoot')
+@client.command()
 async def shoot(ctx, *, user: discord.Member = None):
     if user:
         await ctx.send(f"You are trying to shoot {user.mention}")
@@ -185,7 +255,7 @@ async def shoot(ctx, *, user: discord.Member = None):
             await ctx.send(
                 f'{ctx.message.author.mention} Killing yourself is bad!!'
             )
-        elif user.id in [605457586292129840, 828858506975117332, 828848983978934292, 732077451601248340]:
+        elif user.id in developers:
             await ctx.send(
                 'How dare you try to shoot the super fantastic awesome guy who made me!! Go shoot someone else!!'
             )
@@ -208,7 +278,7 @@ async def bruh(ctx):
 async def clear(ctx, clearno=100):
     await ctx.channel.purge(limit=clearno)
     await ctx.send(f"You cleared {clearno}.")
-    time.sleep(1)
+    await sleep(1)
     await ctx.channel.purge(limit=1)
 
 
@@ -228,10 +298,10 @@ async def help(ctx):
         help_embed = discord.Embed(colour=discord.Colour.green())
     help_embed.set_author(name='Help')
 
-    help_embed.add_field(name='Prefix', value=f'Default Prefix is "c!". But this server prefix is {prefix}',
+    help_embed.add_field(name='Prefix', value=f"Default Prefix is 'c!'. This server's prefix is {prefix}.",
                          inline=False)
 
-    help_embed.add_field(name=f'{prefix}help', value='Shows this message dumdum\n', inline=False)
+    help_embed.add_field(name=f'{prefix}help', value='Shows this message dumdum', inline=False)
 
     help_embed.add_field(name=f'{prefix}setprefix', value='Changes prefix for the server', inline=False)
 
@@ -266,7 +336,7 @@ async def help(ctx):
 @client.command()
 async def dm(ctx, user: discord.Member = None, *, message=None):
     author = ctx.message.author
-    if author.id in [605457586292129840, 828858506975117332, 732077451601248340, 828848983978934292]:
+    if author.id in developers:
         if user:
             if message is None:
                 await ctx.send('No message')
@@ -293,7 +363,7 @@ async def news(ctx, thing, count=3):
     Exterminate(things=[f'{thing}'])
 
     for i, j in zip(titles, links):
-        time.sleep(0.5)
+        await sleep(0.5)
         await ctx.send(f"{i} - {j}")
 
 
