@@ -1,10 +1,12 @@
 # To Do:
 # - Balance
+# - Optimize help command -
+# - Snakes and Ladders -
 # - Need to make help better - ✓
 # - Clear command - ✓
-# - Perms error for kick,
+# - Perms error for kick - ✓
 # - Perms error for unban - ✓
-# - Perms error for ban
+# - Perms error for ban - ✓
 
 import json
 import os
@@ -13,9 +15,6 @@ from itertools import cycle
 from asyncio import sleep
 import discord
 from discord.ext import commands, tasks
-
-from scraper import News, Import, Exterminate, LocaleGet
-from db import CreateDatabase, DuplicateCheckUSER, ExportParameter, UpdateParameter, GetUserLocation
 
 if os.path.isdir('database'):
     pass
@@ -111,175 +110,36 @@ async def change_status():
 
 
 @client.command()
-async def kick(ctx, member: discord.Member, *, reason=None):
-    msg = await ctx.send("Checking Perms...")
-    await sleep(0.5)
-    if isinstance(ctx.channel, discord.channel.DMChannel):
-        msg.edit(content= "Can you teach me how to kick someone in dms?")
-
+async def load(ctx, extension):
+    if ctx.message.author.id in developers:
+        client.load_extension(f'cogs.{extension}')
+        await ctx.send(f"successfully loaded {extension}")
     else:
-        if ctx.message.guild.me.guild_permissions.kick_members:
-            if ctx.message.author.guild_permissions.kick_members:
-                await msg.edit(content="Permissions are valid, checking user you are trying to kick")
-                if member.id==ctx.message.guild.owner_id:
-                    await msg.edit(content="You can't kick the owner of the server!")
-                else:
-                    if member==ctx.message.guild.me:
-                        await msg.edit(content=f"{ctx.message.author.mention}You can't defeat me by using me")
-                    else:
-                        await msg.edit(content=f"Trying to kick {member.mention}")
-                        await sleep(2)
-                        await member.send(f"You are being kicked from {member.guild.name} by {ctx.message.author}\n Reason is {reason}")
-                        await member.kick(reason=reason)
-                        await msg.edit(content=f"Successfully kicked {member}")
-            else:
-                msg.edit(content="You are missing permissions")
-        else:
-            msg.edit(content="I am missing permission")
-
-
-@kick.error
-async def kick_error(ctx, error):
-    if isinstance(error, commands.CommandInvokeError):
-        await ctx.send("Error!! The person you are trying to kick might be on the same or higher role")
-
+        await ctx.send("Only developers can use this command")
 
 
 @client.command()
-async def ban(ctx, member: discord.Member, *, reason=None):
-    msg = await ctx.send("Checking Perms...")
-    await sleep(0.5)
-    if isinstance(ctx.channel, discord.channel.DMChannel):
-        msg.edit(content= "Can you teach me how to ban someone in dms?")
-
+async def unload(ctx, extension):
+    if ctx.message.author.id in developers:
+        client.unload_extension(f'cogs.{extension}')
+        await ctx.send(f"successfully unloaded {extension}")
     else:
-        if ctx.message.guild.me.guild_permissions.ban_members:
-            if ctx.message.author.guild_permissions.ban_members:
-                await msg.edit(content="Permissions are valid, checking user you are trying to kick")
-                if member.id==ctx.message.guild.owner_id:
-                    await msg.edit(content="You can't ban the owner of the server!")
-                else:
-                    if member==ctx.message.guild.me:
-                        await msg.edit(content=f"{ctx.message.author.mention}You can't defeat me by using me")
-                    else:
-                        await msg.edit(content=f"Trying to ban {member.mention}")
-                        await sleep(2)
-                        await member.ban(reason=reason)
-                        await member.send(f"You are being banned from {member.guild.name} by {ctx.message.author}\n Reason is {reason}")
-                        await msg.edit(content=f"Successfully banned {member.mention}")
-            else:
-                msg.edit(content="You are missing permissions")
-        else:
-            msg.edit(content="I am missing permission")
-
-
-@ban.error
-async def ban_error(ctx, error):
-    if isinstance(error, commands.CommandInvokeError):
-        await ctx.send("Error!! The person you are trying to ban might be on the same or higher role")
+        await ctx.send("Only developers can use this command")
 
 
 @client.command()
-async def unban(ctx, *, user=None):
-    try:
-        user = await commands.converter.UserConverter().convert(ctx, user)
-    except:
-        await ctx.send("Error: user could not be found!")
-        return
-
-    try:
-        bans = tuple(ban_entry.user for ban_entry in await ctx.guild.bans())
-        if user in bans:
-            await ctx.guild.unban(user, reason="Responsible moderator: " + str(ctx.author))
-        else:
-            await ctx.send("User not banned!")
-            return
-
-    except discord.Forbidden:
-        await ctx.send("I do not have permission to unban!")
-        return
-
-    except:
-        await ctx.send("Unbanning failed!")
-        return
-
-    await ctx.send(f"Successfully unbanned {user.mention}!")
-
-
-
-@client.command()
-async def ping(ctx):
-    await ctx.send(f'Pong! {round(client.latency * 100, 2)}ms')
-
-
-@client.command(aliases=["HI", "hello", "Hello", "Hey", "hey"])
-async def hi(ctx):
-    await ctx.send('Hi!')
-
-
-@client.command(aliases=[""])
-async def bye(ctx):
-    await ctx.send('Bye! ~~Anyways no one was interested in talking to you~~')
-
-
-@client.command()
-async def thanks(ctx, *, user: discord.Member = None):
-    if user:
-        await ctx.send(f'Yeah, Thank You {user.mention}!!')
+async def reload(ctx, extension):
+    if ctx.message.author.id in developers:
+        client.unload_extension(f'cogs.{extension}')
+        client.load_extension(f'cogs.{extension}')
+        await ctx.send(f"successfully reloaded {extension}")
     else:
-        await ctx.send(
-            "Since you didn't *mention* someone, I think you might be thanking me and <@605457586292129840> !!"
-        )
+        await ctx.send("Only developers can use this command")
 
 
-@client.command(name="balance", aliases=['bal', 'cash'])
-async def balance(ctx, *, user: discord.Member = None):
-    with open("balance.json", "r") as fbal:
-        balancesheet = json.load(fbal)
-
-    user_balance = balancesheet[str(ctx.user.id)]
-    await ctx.send(f"{user.mention} has {user_balance}")
-
-
-@client.command()
-async def shoot(ctx, *, user: discord.Member = None):
-    if user:
-        await ctx.send(f"You are trying to shoot {user.mention}")
-        if user.bot:
-            await ctx.send('You trying to shoot the bots but...')
-            await ctx.send(file=discord.File('static/gifs/uno-reverse.gif'))
-            await ctx.send(
-                f'{ctx.message.author.mention} DIED. NO F/RIP for you! Trying to kill a bot huh!'
-            )
-        elif user.id == ctx.message.author.id:
-            await ctx.send(
-                f'{ctx.message.author.mention} Killing yourself is bad!!'
-            )
-        elif user.id in developers:
-            await ctx.send(
-                'How dare you try to shoot the super fantastic awesome guy who made me!! Go shoot someone else!!'
-            )
-        else:
-            random_num = random.randint(1, 1000)
-            await ctx.send(
-                f'{user.mention} was shot {random_num} times in the head! OOF')
-    else:
-        await ctx.send(
-            'You only had one bullet. Next time *mention* who to shoot')
-
-
-@client.command()
-async def bruh(ctx):
-    await ctx.send(file=discord.File('static/pictures/bruh.jpg'))
-
-
-@client.command()
-@commands.has_permissions(manage_guild=True)
-async def clear(ctx, clearno=100):
-    await ctx.channel.purge(limit=clearno)
-    await ctx.send(f"You cleared {clearno}.")
-    await sleep(1)
-    await ctx.channel.purge(limit=1)
+for files in os.listdir('./cogs'):
+    if files.endswith('.py'):
+        client.load_extension(f'cogs.{files[:-3]}')
 
 
 @client.command(pass_context=True)
@@ -335,8 +195,7 @@ async def help(ctx):
 
 @client.command()
 async def dm(ctx, user: discord.Member = None, *, message=None):
-    author = ctx.message.author
-    if author.id in developers:
+    if ctx.message.author.id in developers:
         if user:
             if message is None:
                 await ctx.send('No message')
@@ -350,61 +209,6 @@ async def dm(ctx, user: discord.Member = None, *, message=None):
             await ctx.send('No User')
     else:
         await ctx.send('Invalid Command?')
-
-
-@client.command()
-async def news(ctx, thing, count=3):
-    CreateDatabase('database/location.db')
-    locale = GetUserLocation('database/location.db', ctx.message.author.id)
-    location = LocaleGet(locale=locale)
-
-    News(thing=[f'{thing}'], count=[f'{count}'], location=location)
-    titles, links = Import(things=[f'{thing}'])
-    Exterminate(things=[f'{thing}'])
-
-    for i, j in zip(titles, links):
-        await sleep(0.5)
-        await ctx.send(f"{i} - {j}")
-
-
-@client.command()
-async def setlocation(ctx, locale):
-
-    countries = ['USA', 'India', 'England', 'Malaysia', 'Vietnam', 'Russia', 'Canada', 'France', 'Germany']
-
-    countries = [x.lower() for x in countries]
-
-    if locale.lower() in countries:
-
-        await ctx.send(f"Hello from {locale.lower()}")
-
-        CreateDatabase('database/location.db')
-        if DuplicateCheckUSER(ctx.message.author.id):
-            ExportParameter(ctx.message.author.id, locale)
-            await ctx.send(f'Nice! {ctx.message.author.name} updated his/her location to {locale.lower()}.')
-
-        else:
-            await ctx.send(f'{ctx.message.author.name} is already in the database with a location, '
-                           f'do you want to update your location?')
-
-            def check(m):
-                return m.content.lower() == 'yes' and m.channel == ctx.channel
-
-            msg = await client.wait_for("message", check=check)
-            await ctx.send(f"Ok {msg.author}!\n\nWhich location do you want to update to?")
-
-            def check(m):
-                return m.content.lower() in countries and m.channel == ctx.channel
-
-
-            msg = await client.wait_for("message", check=check)
-            if msg.content.lower() in countries:
-                CreateDatabase('database/location.db')
-                UpdateParameter(ctx.message.author.id, msg.content.lower())
-                await ctx.send(f'Nice! {msg.author} updated his/her location to {msg.content.lower()}.')
-
-    else:
-        await ctx.send(f"Sorry, News functionality hasn't been expanded to your country yet. Try again later.")
 
 
 client.run(os.getenv('TOKEN'))
