@@ -184,8 +184,8 @@ async def help(ctx):
 
     help_embed.add_field(name=f'{prefix}unban [user]', value='Unbans [user] from the server.', inline=False)
 
-    help_embed.add_field(name=f'{prefix}news [news subject] [number of articles]',
-                         value='Gives you [number of articles] on [news subject].')
+    help_embed.add_field(name=f'{prefix}News [News subject] [number of articles]',
+                         value='Gives you [number of articles] on [News subject].')
 
     help_embed.add_field(name=f'{prefix}bye', value='Says bye to you.', inline=False)
 

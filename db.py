@@ -87,3 +87,4 @@ def GetEverything(database, table):
     lists = cursor.fetchall()
 
     print(lists)
+

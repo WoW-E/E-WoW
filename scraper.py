@@ -44,7 +44,7 @@ def LocaleGet(locale):
 
 
 
-def News(thing, count, location):
+def NewsScrape(thing, count, location):
     global df_titles
 
     for i, j in zip(thing, count):
@@ -142,7 +142,7 @@ def News(thing, count, location):
 
         print(f"{i}'s news scraped successfully.")
 
-        time.sleep(2)
+        time.sleep(1)
 
 
 def Import(things):

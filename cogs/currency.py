@@ -3,7 +3,7 @@ from discord.ext import commands
 import json
 
 
-class balance(commands.Cog):
+class Balance(commands.Cog):
 
     def __init__(self, client):
         self.client = client
@@ -18,4 +18,4 @@ class balance(commands.Cog):
 
 
 def setup(client):
-    client.add_cog(balance(client))
+    client.add_cog(Balance(client))
