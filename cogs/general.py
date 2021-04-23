@@ -1,6 +1,7 @@
+import random
+
 import discord
 from discord.ext import commands
-import random
 
 developers = [605457586292129840, 828858506975117332, 828848983978934292, 732077451601248340]
 

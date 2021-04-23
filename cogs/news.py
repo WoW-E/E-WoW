@@ -1,7 +1,9 @@
-from discord.ext import commands
-from scraper import NewsScrape, Import, Exterminate, LocaleGet
-from db import CreateDatabase, DuplicateCheckUSER, ExportParameter, UpdateParameter, GetUserLocation
 from asyncio import sleep
+
+from discord.ext import commands
+
+from db import DatabaseInit, DuplicateCheckUser, ExportParameter, UpdateParameter, GetUserLocation
+from scraper import NewsScrape, Import, Exterminate, LocaleGet
 
 
 class News(commands.Cog):
@@ -11,11 +13,11 @@ class News(commands.Cog):
 
     @commands.command()
     async def news(self, ctx, thing, count=3):
-        CreateDatabase('database/location.db')
-        locale = GetUserLocation('database/location.db', ctx.message.author.id)
-        location = LocaleGet(locale=locale)
+        DatabaseInit(database='main', table='location', user_id='integer', location='text')
+        locale = GetUserLocation(user=ctx.message.author.id)
+        location_user = LocaleGet(locale=locale)
 
-        NewsScrape(thing=[f'{thing}'], count=[f'{count}'], location=location)
+        NewsScrape(thing=[f'{thing}'], count=[f'{count}'], location=location_user)
         titles, links = Import(things=[f'{thing}'])
         Exterminate(things=[f'{thing}'])
 
@@ -39,36 +41,31 @@ class News(commands.Cog):
 
             await ctx.send(f"Hello from {locale}")
 
-            CreateDatabase('database/location.db')
-            if DuplicateCheckUSER(ctx.message.author.id):
-                ExportParameter(ctx.message.author.id, locale.lower())
-                await ctx.send(f'Nice! {ctx.message.author.name} updated his/her location to {locale}.')
+            DatabaseInit(database='main', table='location', user_id='integer', location='text')
+            if DuplicateCheckUser(database='main', table='location', user=ctx.message.author.id):
+                if ExportParameter(database='main', table='location', user=ctx.message.author.id,
+                                   location=locale.lower()):
+                    await ctx.send(f'Nice! {ctx.message.author.name} updated his/her location to {locale}.')
+                else:
+                    await ctx.send(
+                        f"Something went wrong :-( \nReporting problem to the devs. They aren't going to like this!")
 
             else:
-                await ctx.send(f'{ctx.message.author.name} is already in the database with a location, '
-                               f'do you want to update your location?')
+                await ctx.send(f'{ctx.message.author.name} is already in the database with the location: '
+                               f'{GetUserLocation(user=ctx.message.author.id)}, do you want to update your location?')
 
                 def check(m):
                     return m.content.lower() == 'yes' and m.channel == ctx.channel and ctx.message.author.id == m.author.id
 
                 msg = await self.client.wait_for("message", check=check)
                 if msg.content.lower() == 'yes':
-                    CreateDatabase('database/location.db')
-                    UpdateParameter(ctx.message.author.id, locale.lower())
+                    DatabaseInit(database='main', table='location', user_id='integer', location='text')
+                    UpdateParameter(database='main', table='location', user=ctx.message.author.id,
+                                    location=locale.lower())
                     await ctx.send(f'Nice! {msg.author} updated his/her location to {locale.lower()}.')
-                #
-                # def check(m):
-                #     return m.content.lower() in countries and m.channel == ctx.channel
-                #
-                # msg = await self.client.wait_for("message", check=check)
-                # if msg.content.lower() in countries:
-                #     CreateDatabase('database/location.db')
-                #     UpdateParameter(ctx.message.author.id, msg.content.lower())
-                #     await ctx.send(f'Nice! {msg.author} updated his/her location to {msg.content.lower()}.')
 
         else:
             await ctx.send(f"Sorry, News functionality hasn't been expanded to your country yet. Try again later.")
-
 
     @setlocation.error
     async def set_error(self, ctx, error):

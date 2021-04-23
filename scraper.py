@@ -43,7 +43,6 @@ def LocaleGet(locale):
         return location
 
 
-
 def NewsScrape(thing, count, location):
     global df_titles
 

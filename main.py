@@ -1,6 +1,7 @@
 # To Do:
 # - Balance
 # - Optimize help command -
+# Make database schemas operational -
 # - Snakes and Ladders -
 # - Need to make help better - ✓
 # - Clear command - ✓
@@ -12,7 +13,7 @@ import json
 import os
 import random
 from itertools import cycle
-from asyncio import sleep
+
 import discord
 from discord.ext import commands, tasks
 
