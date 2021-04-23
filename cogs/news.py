@@ -1,27 +1,34 @@
-from discord.ext import commands
-from scraper import News, Import, Exterminate, LocaleGet
-from db import CreateDatabase, DuplicateCheckUSER, ExportParameter, UpdateParameter, GetUserLocation
 from asyncio import sleep
 
+from discord.ext import commands
 
-class news(commands.Cog):
+from db import DatabaseInit, DuplicateCheckUser, ExportParameter, UpdateParameter, GetUserLocation
+from scraper import NewsScrape, Import, Exterminate, LocaleGet
+
+
+class News(commands.Cog):
 
     def __init__(self, client):
         self.client = client
 
     @commands.command()
     async def news(self, ctx, thing, count=3):
-        CreateDatabase('database/location.db')
-        locale = GetUserLocation('database/location.db', ctx.message.author.id)
-        location = LocaleGet(locale=locale)
+        DatabaseInit(database='main', table='location', user_id='integer', location='text')
+        locale = GetUserLocation(user=ctx.message.author.id)
+        location_user = LocaleGet(locale=locale)
 
-        News(thing=[f'{thing}'], count=[f'{count}'], location=location)
+        NewsScrape(thing=[f'{thing}'], count=[f'{count}'], location=location_user)
         titles, links = Import(things=[f'{thing}'])
         Exterminate(things=[f'{thing}'])
 
         for i, j in zip(titles, links):
             await sleep(0.5)
             await ctx.send(f"{i} - {j}")
+
+    @news.error
+    async def news_error(self, ctx, error):
+        if isinstance(error, commands.CommandInvokeError):
+            await ctx.send("You haven't set a location yet. Please use the 'setlocation' command to set your location.")
 
     @commands.command()
     async def setlocation(self, ctx, locale):
@@ -32,35 +39,39 @@ class news(commands.Cog):
 
         if locale.lower() in countries:
 
-            await ctx.send(f"Hello from {locale.lower()}")
+            await ctx.send(f"Hello from {locale}")
 
-            CreateDatabase('database/location.db')
-            if DuplicateCheckUSER(ctx.message.author.id):
-                ExportParameter(ctx.message.author.id, locale)
-                await ctx.send(f'Nice! {ctx.message.author.name} updated his/her location to {locale.lower()}.')
+            DatabaseInit(database='main', table='location', user_id='integer', location='text')
+            if DuplicateCheckUser(database='main', table='location', user=ctx.message.author.id):
+                if ExportParameter(database='main', table='location', user=ctx.message.author.id,
+                                   location=locale.lower()):
+                    await ctx.send(f'Nice! {ctx.message.author.name} updated his/her location to {locale}.')
+                else:
+                    await ctx.send(
+                        f"Something went wrong :-( \nReporting problem to the devs. They aren't going to like this!")
 
             else:
-                await ctx.send(f'{ctx.message.author.name} is already in the database with a location, '
-                               f'do you want to update your location?')
+                await ctx.send(f'{ctx.message.author.name} is already in the database with the location: '
+                               f'{GetUserLocation(user=ctx.message.author.id)}, do you want to update your location?')
 
                 def check(m):
-                    return m.content.lower() == 'yes' and m.channel == ctx.channel
+                    return m.content.lower() == 'yes' and m.channel == ctx.channel and ctx.message.author.id == m.author.id
 
                 msg = await self.client.wait_for("message", check=check)
-                await ctx.send(f"Ok {msg.author}!\n\nWhich location do you want to update to?")
-
-                def check(m):
-                    return m.content.lower() in countries and m.channel == ctx.channel
-
-                msg = await self.client.wait_for("message", check=check)
-                if msg.content.lower() in countries:
-                    CreateDatabase('database/location.db')
-                    UpdateParameter(ctx.message.author.id, msg.content.lower())
-                    await ctx.send(f'Nice! {msg.author} updated his/her location to {msg.content.lower()}.')
+                if msg.content.lower() == 'yes':
+                    DatabaseInit(database='main', table='location', user_id='integer', location='text')
+                    UpdateParameter(database='main', table='location', user=ctx.message.author.id,
+                                    location=locale.lower())
+                    await ctx.send(f'Nice! {msg.author} updated his/her location to {locale.lower()}.')
 
         else:
             await ctx.send(f"Sorry, News functionality hasn't been expanded to your country yet. Try again later.")
 
+    @setlocation.error
+    async def set_error(self, ctx, error):
+        if isinstance(error, commands.ExpectedClosingQuoteError):
+            await ctx.send("Trying to inject your code huh? You mf.")
+
 
 def setup(client):
-    client.add_cog(news(client))
+    client.add_cog(News(client))

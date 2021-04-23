@@ -1,9 +1,10 @@
-import discord
-from discord.ext import commands
 from asyncio import sleep
 
+import discord
+from discord.ext import commands
 
-class utility(commands.Cog):
+
+class Utility(commands.Cog):
 
     def __init__(self, client):
         self.client = client
@@ -110,4 +111,4 @@ class utility(commands.Cog):
 
 
 def setup(client):
-    client.add_cog(utility(client))
+    client.add_cog(Utility(client))
