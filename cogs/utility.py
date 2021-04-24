@@ -103,7 +103,8 @@ class Utility(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(manage_guild=True)
-    async def clear(self, ctx, clearno=100):
+    async def clear(self, ctx, clearno=1):
+        clearno += 1
         await ctx.channel.purge(limit=clearno)
         await ctx.send(f"You cleared {clearno}.")
         await sleep(1)
