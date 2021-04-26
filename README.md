@@ -11,6 +11,7 @@ A Discord bot which is awesome.
 
 # Usage:
 >Default Prefix: `c!`
+
 General:
 * `c!hi/hello`: Greets you.
 * `c!shoot {user}`: Shoots `{user}`.
