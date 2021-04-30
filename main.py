@@ -110,10 +110,10 @@ async def change_status():
 @client.command()
 async def load(ctx, extension):
     if ctx.message.author.id in developers:
-        if extension=="all":
-            for files in os.listdir('./cogs'):
-                if files.endswith('.py'):
-                    client.load_extension(f'cogs.{files[:-3]}')
+        if extension == "all":
+            for cog_files in os.listdir('./cogs'):
+                if cog_files.endswith('.py'):
+                    client.load_extension(f'cogs.{cog_files[:-3]}')
         else:
 
             client.load_extension(f'cogs.{extension}')
@@ -125,10 +125,10 @@ async def load(ctx, extension):
 @client.command()
 async def unload(ctx, extension):
     if ctx.message.author.id in developers:
-        if extension=="all":
-            for files in os.listdir('./cogs'):
-                if files.endswith('.py'):
-                    client.load_extension(f'cogs.{files[:-3]}')
+        if extension == "all":
+            for cog_files in os.listdir('./cogs'):
+                if cog_files.endswith('.py'):
+                    client.unload_extension(f'cogs.{cog_files[:-3]}')
         else:
             client.unload_extension(f'cogs.{extension}')
         await ctx.send(f"Successfully unloaded {extension}")
@@ -139,17 +139,18 @@ async def unload(ctx, extension):
 @client.command()
 async def reload(ctx, extension):
     if ctx.message.author.id in developers:
-        if extension=="all":
-            for files in os.listdir('./cogs'):
-                if files.endswith('.py'):
-                    client.unload_extension(f'cogs.{files[:-3]}')
-                    client.load_extension(f'cogs.{files[:-3]}')
+        if extension == "all":
+            for cog_files in os.listdir('./cogs'):
+                if cog_files.endswith('.py'):
+                    client.unload_extension(f'cogs.{cog_files[:-3]}')
+                    client.load_extension(f'cogs.{cog_files[:-3]}')
         else:
             client.unload_extension(f'cogs.{extension}')
             client.load_extension(f'cogs.{extension}')
         await ctx.send(f"successfully reloaded {extension}")
     else:
         await ctx.send("Only developers can use this command")
+
 
 for files in os.listdir('./cogs'):
     if files.endswith('.py'):
@@ -160,29 +161,33 @@ for files in os.listdir('./cogs'):
 async def help(ctx, command1="help", *command):
     with open("json_files/prefixes.json", "r") as fprefix:
         prefixes = json.load(fprefix)
-    command_all=[]
+    command_all = []
     for items in command:
         command_all.append(items)
     prefix = prefixes[str(ctx.guild.id)]
     author = ctx.message.author
     help_embed = discord.Embed(title='Help',
-                                   description=f"These are all the commands of the bot\nMore information about a command can be found out using `{prefix}help [command]`",
-                                   colour=discord.Colour.blue())
+                               description=f"These are all the commands of the bot\nMore information about a command "
+                                           f"can be found out using `{prefix}help [command]`",
+                               colour=discord.Colour.blue())
 
-    if command1=="help":
+    if command1 == "help":
         help_embed.add_field(name='Prefix', value=f"Default Prefix is 'c!'. This server's prefix is `{prefix}`",
-                         inline=False)
+                             inline=False)
 
-        help_embed.add_field(name=' :performing_arts: General', value='`bruh` `bye` `hi` `shoot` `thanks`', inline=False)
+        help_embed.add_field(name=' :performing_arts: General', value='`bruh` `bye` `hi` `shoot` `thanks`',
+                             inline=False)
 
         help_embed.add_field(name=' :newspaper: News', value='`location` `news` `setlocation`', inline=False)
 
-        help_embed.add_field(name=' :wrench: Utility', value='`ban` `clear` `kick` `ping` `setprefix` `unban`', inline=False)
+        help_embed.add_field(name=' :wrench: Utility', value='`ban` `clear` `kick` `ping` `setprefix` `unban`',
+                             inline=False)
 
-        help_embed.add_field(name=' :moneybag: Currency', value='C_mming soon :upside_down:', inline=False)
+        help_embed.add_field(name=' :moneybag: Currency', value='`balance`', inline=False)
 
         if ctx.message.author.id in developers:
-            help_embed.add_field(name=' :detective: Developers', value="`addprefixmanually` `load` `reload` `showprefixes` `unload` ", inline=False)
+            help_embed.add_field(name=' :detective: Developers',
+                                 value="`addprefixmanually` `load` `reload` `showprefixes` `unload` ", inline=False)
 
     else:
         command_all.append(command1)
@@ -195,7 +200,7 @@ async def help(ctx, command1="help", *command):
                 help_embed.add_field(name='bye', value='Says bye to you.', inline=False)
             elif command_items == "clear":
                 help_embed.add_field(name="clear [number of messages]",
-                                      value='Deletes [number of messages] which are the most recently sent.')
+                                     value='Deletes [number of messages] which are the most recently sent.')
             elif command_items == "dm":
                 help_embed.add_field(name="dm [user] [message]", value='Sends a [message] to [user].')
             elif command_items in ["hi", "hello", "hey"]:
@@ -203,18 +208,19 @@ async def help(ctx, command1="help", *command):
             elif command_items == "kick":
                 help_embed.add_field(name='kick [user]', value='Kicks [user] from the server.', inline=False)
             elif command_items == "location":
-                help_embed.add_field(name='Shows your current location set.',
-                                      value='Gives you [number of articles] on [News subject].')
+                help_embed.add_field(name='location',
+                                     value='Shows your currently set location')
             elif command_items == "news":
                 help_embed.add_field(name='News [News subject] [number of articles]',
-                                      value='Gives you [number of articles] on [News subject].')
+                                     value='Gives you [number of articles] on [News subject].')
             elif command_items == "ping":
                 help_embed.add_field(name='ping', value='Shows your ping', inline=False)
-            elif command_items == "setlocation [location]":
-                help_embed.add_field(name='Sets your location to [location]. Can be used to change current location too.',
-                                      value='Gives you [number of articles] on [News subject].')
+            elif command_items == "setlocation":
+                help_embed.add_field(name='setlocation [location]',
+                                     value='Sets your location to [location]. Can be used to change current location '
+                                           'too.')
             elif command_items == "setprefix":
-                help_embed.add_field(name=f'setprefix', value='Changes prefix for the server.', inline=False)
+                help_embed.add_field(name='setprefix', value='Changes prefix for the server.', inline=False)
             elif command_items == "shoot":
                 help_embed.add_field(name='shoot [user]', value='shoots [user] random number of bullets.', inline=False)
             elif command_items == "thanks":

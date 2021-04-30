@@ -1,5 +1,4 @@
 from asyncio import sleep
-
 import discord
 from discord.ext import commands
 
@@ -54,7 +53,7 @@ class News(commands.Cog):
             if DuplicateCheckUser(database='main', table='location', user=ctx.message.author.id):
                 if ExportParameter(database='main', table='location', user=ctx.message.author.id,
                                    location=locale.lower()):
-                    await ctx.send(f'Nice! {ctx.message.author.name} set his/her location to {locale}.')
+                    await ctx.send(f'Nice! {ctx.message.author.name} set their location to {locale}.')
                 else:
                     await ctx.send(
                         f"Something went wrong :-( \nReporting problem to the devs. They aren't going to like this!")

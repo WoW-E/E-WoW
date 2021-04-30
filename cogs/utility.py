@@ -20,6 +20,7 @@ class Utility(commands.Cog):
             if ctx.message.guild.me.guild_permissions.kick_members:
                 if ctx.message.author.guild_permissions.kick_members:
                     await msg.edit(content="Permissions are valid, checking user you are trying to kick")
+                    await sleep(0.5)
                     if member.id == ctx.message.guild.owner_id:
                         await msg.edit(content="You can't kick the owner of the server!")
                     else:
@@ -102,13 +103,19 @@ class Utility(commands.Cog):
         await ctx.send(f"Successfully unbanned {user.mention}!")
 
     @commands.command()
-    @commands.has_permissions(manage_guild=True)
     async def clear(self, ctx, clearno=1):
-        clearno += 1
-        await ctx.channel.purge(limit=clearno)
-        await ctx.send(f"You cleared {clearno}.")
-        await sleep(1)
-        await ctx.channel.purge(limit=1)
+        if ctx.message.guild.me.guild_permissions.kick_members:
+            if ctx.message.author.guild_permissions.kick_members:
+                clearno += 1
+                await ctx.channel.purge(limit=clearno)
+                clearno -= 1
+                await ctx.send(f"You cleared {clearno}.")
+                await sleep(1)
+                await ctx.channel.purge(limit=1)
+            else:
+                await ctx.send("You are missing permissions")
+        else:
+            await ctx.send("I am missing permissions")
 
 
 def setup(client):
