@@ -2,11 +2,12 @@ import random
 
 import discord
 from discord.ext import commands
+from asyncio import sleep
 
 developers = [605457586292129840, 828858506975117332, 828848983978934292, 732077451601248340]
 
 
-class general(commands.Cog):
+class General(commands.Cog):
 
     def __init__(self, client):
         self.client = client
@@ -19,9 +20,11 @@ class general(commands.Cog):
     async def hi(self, ctx):
         await ctx.send('Hi!')
 
-    @commands.command(aliases=[""])
+    @commands.command(aliases=["Goodbye"])
     async def bye(self, ctx):
-        await ctx.send('Bye! ~~Anyways no one was interested in talking to you~~')
+        msg = await ctx.send('Bye!')
+        await sleep(3)
+        await msg.edit(content="Bye! ~~Anyways no one was interested in talking to you~~")
 
     @commands.command()
     async def thanks(self, ctx, *, user: discord.Member = None):
@@ -29,7 +32,8 @@ class general(commands.Cog):
             await ctx.send(f'Yeah, Thank You {user.mention}!!')
         else:
             await ctx.send(
-                "Since you didn't *mention* someone, I think you might be thanking me and <@605457586292129840> !!"
+                "Since you didn't *mention* someone, I think you might be thanking me and the awesome developers who "
+                "made me !! "
             )
 
     @commands.command()
@@ -64,4 +68,4 @@ class general(commands.Cog):
 
 
 def setup(client):
-    client.add_cog(general(client))
+    client.add_cog(General(client))
